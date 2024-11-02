@@ -51,4 +51,4 @@ hello_world = Score(
     labels=[],
 )
 
-pprint(hello_world)
+pprint(hello_world.serialize())

@@ -5,7 +5,7 @@ from .main import Score as ObjectScore, Label, Variable, Datum, Operation
 from .muse import Score as MuseScore
 
 
-def interval_evaluator(staff, staff_name, ValueType):
+def interval_evaluator(staff, staff_name, ValueType, ignore_rests=False):
     values: list[ValueType] = []
 
     notes = staff.get_notes()
@@ -16,7 +16,8 @@ def interval_evaluator(staff, staff_name, ValueType):
     note_counter = 0
     for note in notes:
         if note.pitch == -1:
-            values.append(ValueType(clock, 0))
+            if not ignore_rests:
+                values.append(ValueType(clock, 0))
             last_note = None
             clock += note.duration
             continue
@@ -44,8 +45,7 @@ def get_operations(muse_score: MuseScore) -> list[Operation]:
 def get_data(muse_score: MuseScore) -> list[Datum]:
     staff = muse_score.staffs[1]
     staff_name = "data"
-    # TODO fix None types
-    return []#interval_evaluator(staff, staff_name, Datum)
+    return interval_evaluator(staff, staff_name, Datum, ignore_rests=True)
 
 
 def get_variables(muse_score: MuseScore) -> list[Variable]:

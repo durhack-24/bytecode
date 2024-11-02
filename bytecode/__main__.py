@@ -2,7 +2,7 @@ from pathlib import Path
 
 if __name__ == "__main__":
     import sys
-    from . import main
+    from bytecode import main
     input_file = Path(sys.argv[1])
     output_file = Path(sys.argv[2])
 

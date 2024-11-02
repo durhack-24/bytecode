@@ -20,11 +20,16 @@ class Voice:
 
     @property
     def time_sig(self):
-        return int(16 * self.time_sig_n / self.time_sig_d)
+        if self.previous_time_sig is not None:
+            return self.previous_time_sig
+        try:
+            return int(16 * self.time_sig_n / self.time_sig_d)
+        except AttributeError as e:
+            print("WARN: " + e.name)
+            return None
 
-    def __init__(self, voice_elm: ET.Element, time_sig: int|None = None):
-        if time_sig is not None:
-            self.time_sig = time_sig
+    def __init__(self, voice_elm: ET.Element, time_sig: int | None = None):
+        self.previous_time_sig = time_sig
         self.notes: list[Note] = []
         for child in voice_elm:
             if child.tag == "TimeSig":
@@ -46,7 +51,6 @@ class Voice:
                                     Note(int(great_grand_child.text), ticks))
             elif child.tag == "Rest":
                 self.notes.append(Note(-1, self.time_sig))
-        return self.time_sig
 
 
 class Measure:
@@ -59,9 +63,12 @@ class Measure:
 
     def __init__(self, measure_elm: ET.Element):
         self.voices: list[Voice] = []
+        previous_signature = None
         for child in measure_elm:
             if child.tag == "voice":
-                self.voices.append(Voice(child))
+                voice = Voice(child, previous_signature)
+                previous_signature = voice.time_sig
+                self.voices.append(voice)
 
 
 class Staff:

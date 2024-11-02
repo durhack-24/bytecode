@@ -8,7 +8,8 @@ class Duration(EnumType):
     half = 8
     whole = 16
 
-    def parse_duration(self, duration: str) -> int:
+    @staticmethod
+    def parse_duration(duration: str) -> int:
         return {
             "sixteenth": Duration.sixteenth,
             "eighth": Duration.eighth,

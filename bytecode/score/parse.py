@@ -5,33 +5,53 @@ from .main import Score as ObjectScore, Label, Variable, Datum, Operation
 from .muse import Score as MuseScore
 
 
+def interval_evaluator(staff, staff_name, ValueType):
+    values: list[ValueType] = []
+
+    notes = staff.get_notes()
+    if len(notes) == 0:
+        raise SyntaxError("No notes found in score for " + staff_name)
+    clock = 0
+    last_note = None
+    note_counter = 0
+    for note in notes:
+        if note.pitch == -1:
+            values.append(ValueType(clock, 0))
+            last_note = None
+            clock += note.duration
+            continue
+
+        if last_note is not None:
+            # get diff between this and previous
+            diff = note.pitch - last_note.pitch
+            values.append(ValueType(clock, diff))
+
+            clock += note.duration + last_note.duration
+            last_note = None
+        else:
+            last_note = note
+
+        note_counter += 1
+    return values
+
+
 def get_operations(muse_score: MuseScore) -> list[Operation]:
-    operations = []
-    # TODO implement
-    # for child in muse_score:
-    #     if child.tag == "Operations":
-    #         for grand_child in child:
-    #             operations.append(grand_child.text)
-    return operations
+    staff = muse_score.staffs[0]
+    staff_name = "operations"
+    return interval_evaluator(staff, staff_name, Operation)
 
 
 def get_data(muse_score: MuseScore) -> list[Datum]:
-    data = []
-    # TODO implement
-    # for child in muse_score:
-    #     if child.tag == "Data":
-    #         for grand_child in child:
-    #             data.append(grand_child.text)
-    return data
+    staff = muse_score.staffs[1]
+    staff_name = "data"
+    # TODO fix None types
+    return []#interval_evaluator(staff, staff_name, Datum)
 
 
 def get_variables(muse_score: MuseScore) -> list[Variable]:
     variables = []
     # TODO implement
-    # for child in muse_score:
-    #     if child.tag == "Variables":
-    #         for grand_child in child:
-    #             variables.append(grand_child.text)
+
     return variables
 
 

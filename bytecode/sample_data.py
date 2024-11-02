@@ -29,7 +29,7 @@ hello_world = Score(
         Operation(14 * 4, 0x0c)
     ],
     data=[
-        Datum(2, 0x44),
+        Datum(0, 0x44),
         Datum(6, 0x65),
         Datum(10, 0x6c),
         Datum(14, 0x6c),
@@ -51,4 +51,4 @@ hello_world = Score(
     labels=[],
 )
 
-pprint(hello_world.serialize())
+print(hello_world.serialize())

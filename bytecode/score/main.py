@@ -37,3 +37,10 @@ class Score:
     data: list[Datum]
     variables: list[Variable]
     labels: list[Label]
+
+    def merge(self, other):
+        self.operations.extend(other.operations)
+        self.data.extend(other.data)
+        self.variables.extend(other.variables)
+        self.labels.extend(other.labels)
+        return self

@@ -5,6 +5,9 @@ description = "Musescore to Bytecode"
 authors = ["MaxAFriedrich <58374387+MaxAFriedrich@users.noreply.github.com>"]
 license = "MIT"
 readme = "README.md"
+packages = [
+    { include = "bytecode", from = "." }
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"

@@ -1,28 +1,52 @@
+from dataclasses import dataclass
 from xml.etree import ElementTree as ET
 
 from bytecode.score.utils import Duration
 
 
+@dataclass
+class Note:
+    pitch: int
+    duration: int
+
+
 class Voice:
 
     def __str__(self):
-        out = f"Voice(Ticks: {self.ticks}, Pitches: "
-        for pitch in self.pitches:
-            out += f"{pitch}, "
-        return out[:-2] + ") "
+        out = f"Voice(Notes: "
+        for note in self.notes:
+            out += str(note) + ", "
+        return out[:-2] + ")"
 
-    def __init__(self, voice_elm: ET.Element):
-        self.ticks: Duration = Duration.sixteenth
-        self.pitches: list[int] = []
+    @property
+    def time_sig(self):
+        return int(16 * self.time_sig_n / self.time_sig_d)
+
+    def __init__(self, voice_elm: ET.Element, time_sig: int|None = None):
+        if time_sig is not None:
+            self.time_sig = time_sig
+        self.notes: list[Note] = []
         for child in voice_elm:
-            if child.tag == "Chord":
-                for child in child:
-                    if child.tag == "durationType":
-                        self.ticks = Duration.parse_duration(child.text)
-                    if child.tag == "Note":
-                        for child in child:
-                            if child.tag == "pitch":
-                                self.pitches.append(int(child.text))
+            if child.tag == "TimeSig":
+                print("TimeSig")
+                for grand_child in child:
+                    if grand_child.tag == "sigN":
+                        self.time_sig_n = int(grand_child.text)
+                    if grand_child.tag == "sigD":
+                        self.time_sig_d = int(grand_child.text)
+            elif child.tag == "Chord":
+                ticks = 0
+                for grand_child in child:
+                    if grand_child.tag == "durationType":
+                        ticks = Duration.parse_duration(grand_child.text)
+                    if grand_child.tag == "Note":
+                        for great_grand_child in grand_child:
+                            if great_grand_child.tag == "pitch":
+                                self.notes.append(
+                                    Note(int(great_grand_child.text), ticks))
+            elif child.tag == "Rest":
+                self.notes.append(Note(-1, self.time_sig))
+        return self.time_sig
 
 
 class Measure:
@@ -43,11 +67,10 @@ class Measure:
 class Staff:
 
     def __str__(self):
-        out= f"Staff(Measures: "
+        out = f"Staff(Measures: "
         for measure in self.measures:
             out += str(measure) + ", "
         return out[:-2] + ")"
-
 
     def __init__(self, staff_elm: ET.Element):
         self.measures: list[Measure] = []

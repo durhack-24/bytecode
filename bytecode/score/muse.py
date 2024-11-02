@@ -85,6 +85,14 @@ class Staff:
             if child.tag == "Measure":
                 self.measures.append(Measure(child))
 
+    def get_notes(self):
+        notes = []
+        for measure in self.measures:
+            for voice in measure.voices:
+                for note in voice.notes:
+                    notes.append(note)
+        return notes
+
 
 class Score:
 

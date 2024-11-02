@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "bytecode"
+version = "0.1.0"
+description = "Musescore to Bytecode"
+authors = ["MaxAFriedrich <58374387+MaxAFriedrich@users.noreply.github.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

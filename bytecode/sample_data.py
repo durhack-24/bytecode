@@ -2,6 +2,7 @@ from pprint import pprint
 
 from score.main import *
 
+# This is PSUEDO-CODE!!!
 """
 MOVARR y, 0, 0x44
 MOVARR y, 1, 0x65

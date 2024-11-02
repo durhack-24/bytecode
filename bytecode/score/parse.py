@@ -50,7 +50,14 @@ def get_data(muse_score: MuseScore) -> list[Datum]:
 
 def get_variables(muse_score: MuseScore) -> list[Variable]:
     variables = []
-    # TODO implement
+    staff = muse_score.staffs[2]
+
+    notes = staff.get_notes()
+    clock = 0
+    for note in notes:
+        if note.pitch != -1:
+            variables.append(Variable(clock, note.pitch))
+        clock += note.duration
 
     return variables
 

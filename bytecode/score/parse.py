@@ -2,10 +2,16 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from .main import Score as ObjectScore, Label, Variable, Datum, Operation
-from .muse import Score as MuseScore
+from .muse import Score as MuseScore, SlurState
 
 
-def interval_evaluator(staff, staff_name, ValueType, ignore_rests=False):
+def interval_evaluator(
+        staff,
+        staff_name,
+        ValueType,
+        ignore_rests=False,
+        slur_accumulator=False
+):
     values: list[ValueType] = []
 
     notes = staff.get_notes()
@@ -14,6 +20,7 @@ def interval_evaluator(staff, staff_name, ValueType, ignore_rests=False):
     clock = 0
     last_note = None
     note_counter = 0
+    accumulator = 0
     for note in notes:
         if note.pitch == -1:
             if not ignore_rests:
@@ -25,10 +32,31 @@ def interval_evaluator(staff, staff_name, ValueType, ignore_rests=False):
         if last_note is not None:
             # get diff between this and previous
             diff = note.pitch - last_note.pitch
-            values.append(ValueType(clock, diff))
+            if note.slur_state == SlurState.SLUR_START and slur_accumulator:
+                accumulator = diff
+                clock += note.duration
+            elif note.slur_state == SlurState.NO_SLUR and slur_accumulator:
+                # bit shift left by 4 to make room for next diff
+                if accumulator == 0:
+                    sign = (diff >> 31) & 1
+                else:
+                    sign = (accumulator >> 31) & 1
 
-            clock += note.duration + last_note.duration
-            last_note = None
+                # Apply the sign to the result
+                accumulator = ((accumulator << 4) + diff) & 0xFFFFFFFF
+                if sign:
+                    accumulator = -accumulator
+                clock += note.duration
+            elif note.slur_state == SlurState.SLUR_END and slur_accumulator:
+                values.append(ValueType(clock, accumulator))
+                clock += note.duration
+                last_note = None
+                accumulator = 0
+            else:
+                values.append(ValueType(clock, diff))
+                clock += note.duration + last_note.duration
+                last_note = None
+
         else:
             last_note = note
 
@@ -45,7 +73,13 @@ def get_operations(muse_score: MuseScore) -> list[Operation]:
 def get_data(muse_score: MuseScore) -> list[Datum]:
     staff = muse_score.staffs[1]
     staff_name = "data"
-    return interval_evaluator(staff, staff_name, Datum, ignore_rests=True)
+    return interval_evaluator(
+        staff,
+        staff_name,
+        Datum,
+        ignore_rests=True,
+        slur_accumulator=True
+    )
 
 
 def get_variables(muse_score: MuseScore) -> list[Variable]:
@@ -64,11 +98,9 @@ def get_variables(muse_score: MuseScore) -> list[Variable]:
 
 def get_labels(muse_score: MuseScore) -> list[Label]:
     labels = []
-    # TODO implement
-    # for child in muse_score:
-    #     if child.tag == "Labels":
-    #         for grand_child in child:
-    #             labels.append(grand_child.text)
+    rehearsal_marks = muse_score.staffs[0].get_rehearsal_marks()
+    for rehearsal_mark in rehearsal_marks:
+        labels.append(Label(rehearsal_mark.ticks, rehearsal_mark.text))
     return labels
 
 

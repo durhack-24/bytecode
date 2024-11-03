@@ -22,6 +22,7 @@ def interval_evaluator(
     note_counter = 0
     accumulator = 0
     is_slur_start = False
+    slur_length = 0
     for note in notes:
         if note.pitch == -1:
             if not ignore_rests:
@@ -37,17 +38,24 @@ def interval_evaluator(
                 accumulator = diff
                 is_slur_start = False
                 print("start_accumulator", hex(accumulator))
-                clock += note.duration
+                clock += note.duration + last_note.duration
+                slur_length += note.duration + last_note.duration
+                last_note = None
             elif (note.slur_state == SlurState.NO_SLUR and slur_accumulator
                   and accumulator):
                 # bit shift left by 4 to make room for next diff
-                accumulator, clock = accumulator_maths(accumulator, clock, diff,
-                                                       note)
-            elif note.slur_state == SlurState.SLUR_END and slur_accumulator:
-                values.append(ValueType(clock, accumulator))
-                clock += note.duration
+                clock += note.duration + last_note.duration
+                slur_length += note.duration + last_note.duration
+                accumulator = accumulator_maths(accumulator, diff)
                 last_note = None
-                print("accumulator", hex(accumulator))
+            elif note.slur_state == SlurState.SLUR_END and slur_accumulator:
+                print("end_accumulator", hex(accumulator))
+                print("end_diff", hex(diff))
+                accumulator = accumulator_maths(accumulator, diff)
+                values.append(ValueType(clock - slur_length, accumulator))
+                clock += note.duration + last_note.duration
+                slur_length = 0
+                last_note = None
                 accumulator = 0
             else:
                 values.append(ValueType(clock, diff))
@@ -63,7 +71,7 @@ def interval_evaluator(
     return values
 
 
-def accumulator_maths(accumulator, clock, diff, note):
+def accumulator_maths(accumulator, diff):
     nibble = diff & 0xF
     print(hex(nibble), diff)
     if accumulator == 0:
@@ -74,8 +82,7 @@ def accumulator_maths(accumulator, clock, diff, note):
     accumulator = ((accumulator << 4) | nibble) & 0xFFFFFFFF
     if sign:
         accumulator = -accumulator
-    clock += note.duration
-    return accumulator, clock
+    return accumulator
 
 
 def get_operations(muse_score: MuseScore) -> list[Operation]:

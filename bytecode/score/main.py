@@ -12,21 +12,21 @@ class Operation(Value):
     # value is diff between two notes
 
     def serialize(self):
-        return f"\nT{self.tick}O{self.value}\n"
+        return f"O{abs(self.value)}\n"
 
 
 @dataclass
 class Datum(Value):
     # value is diff between two notes
     def serialize(self):
-        return f"T{self.tick}D{self.value}\n"
+        return f"D{self.value}\n"
 
 
 @dataclass
 class Variable(Value):
     # value is note value is the name of a variable
     def serialize(self):
-        return f"T{self.tick}V{self.value}\n"
+        return f"V{self.value}\n"
 
 
 @dataclass
@@ -35,7 +35,7 @@ class Label(Value):
     value: str
 
     def serialize(self):
-        return f"T{self.tick}L{self.value}\n"
+        return f"L{self.value}\n"
 
 
 @dataclass
@@ -52,6 +52,28 @@ class Score:
         self.labels.extend(other.labels)
         return self
 
+    @staticmethod
+    def __remove_nop_data(input):
+        # remove everything between a noop instruction and the next instruction
+        output = []
+        last_is_noop = False
+        noop_instruction = "O0"
+        for line in input:
+            if line[2][0] == noop_instruction:
+                last_is_noop = True
+            elif last_is_noop and line[2][0] == noop_instruction:
+                last_is_noop = False
+            else:
+                output.append(line)
+        return output
+
+
+
+
+
+
+
+
     def serialize(self):
         output = []
         for operation in self.operations:
@@ -67,4 +89,5 @@ class Score:
             output.append((label.tick, 0, label.serialize()))
 
         output.sort()
+        output = self.__remove_nop_data(output)
         return "".join(x[2] for x in output)

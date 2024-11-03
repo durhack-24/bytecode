@@ -12,21 +12,21 @@ class Operation(Value):
     # value is diff between two notes
 
     def serialize(self):
-        return f"{self.tick}O{self.value}\n"
+        return f"\nT{self.tick}O{self.value}\n"
 
 
 @dataclass
 class Datum(Value):
     # value is diff between two notes
     def serialize(self):
-        return f"{self.tick}D{self.value}\n"
+        return f"T{self.tick}D{self.value}\n"
 
 
 @dataclass
 class Variable(Value):
     # value is note value is the name of a variable
     def serialize(self):
-        return f"{self.tick}V{self.value}\n"
+        return f"T{self.tick}V{self.value}\n"
 
 
 @dataclass
@@ -35,7 +35,7 @@ class Label(Value):
     value: str
 
     def serialize(self):
-        return f"{self.tick}L{self.value}\n"
+        return f"T{self.tick}L{self.value}\n"
 
 
 @dataclass

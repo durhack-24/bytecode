@@ -92,14 +92,14 @@ class Measure:
             out += str(voice) + ", "
         return out[:-2] + ")"
 
-    def __init__(self, measure_elm: ET.Element):
+    def __init__(self, measure_elm: ET.Element, previous_signature: int = 16):
         self.voices: list[Voice] = []
-        previous_signature = 16
         for child in measure_elm:
             if child.tag == "voice":
                 voice = Voice(child, previous_signature)
                 previous_signature = voice.time_sig
                 self.voices.append(voice)
+        self.time_sig = previous_signature
 
 
 class Staff:
@@ -112,9 +112,12 @@ class Staff:
 
     def __init__(self, staff_elm: ET.Element):
         self.measures: list[Measure] = []
+        previous_signature = 16
         for child in staff_elm:
             if child.tag == "Measure":
-                self.measures.append(Measure(child))
+                measure = Measure(child, previous_signature)
+                previous_signature = measure.time_sig
+                self.measures.append(measure)
 
     def get_notes(self):
         notes = []
@@ -129,10 +132,10 @@ class Staff:
         ticks = 0
         for measure in self.measures:
             for voice in measure.voices:
-                ticks += voice.time_sig
                 if voice.rehearsal_mark:
                     rehearsal_marks.append(
                         RehearsalMark(voice.rehearsal_mark, ticks))
+                ticks += voice.time_sig
         return rehearsal_marks
 
 

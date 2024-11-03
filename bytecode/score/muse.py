@@ -18,13 +18,19 @@ class Note:
     slur_state: int = SlurState.NO_SLUR
 
 
+@dataclass
+class RehearsalMark:
+    text: str
+    ticks: int
+
+
 class Voice:
 
     def __str__(self):
         out = f"Voice(Notes: "
         for note in self.notes:
             out += str(note) + ", "
-        return out[:-2] + ")"
+        return out[:-2] + " Rehearsal Mark: " + str(self.rehearsal_mark) + ")"
 
     @property
     def time_sig(self):
@@ -36,6 +42,7 @@ class Voice:
     def __init__(self, voice_elm: ET.Element, time_sig: int = 16):
         self.previous_time_sig = time_sig
         self.notes: list[Note] = []
+        self.rehearsal_mark = None
         for child in voice_elm:
             if child.tag == "TimeSig":
                 for grand_child in child:
@@ -43,6 +50,10 @@ class Voice:
                         self.time_sig_n = int(grand_child.text)
                     if grand_child.tag == "sigD":
                         self.time_sig_d = int(grand_child.text)
+            elif child.tag == "RehearsalMark":
+                for grand_child in child:
+                    if grand_child.tag == "text":
+                        self.rehearsal_mark = grand_child.text
             elif child.tag == "Chord":
                 ticks = 0
                 slur_state = SlurState.NO_SLUR
@@ -112,6 +123,17 @@ class Staff:
                 for note in voice.notes:
                     notes.append(note)
         return notes
+
+    def get_rehearsal_marks(self) -> list[RehearsalMark]:
+        rehearsal_marks = []
+        ticks = 0
+        for measure in self.measures:
+            for voice in measure.voices:
+                ticks += voice.time_sig
+                if voice.rehearsal_mark:
+                    rehearsal_marks.append(
+                        RehearsalMark(voice.rehearsal_mark, ticks))
+        return rehearsal_marks
 
 
 class Score:

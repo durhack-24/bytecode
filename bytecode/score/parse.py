@@ -98,11 +98,9 @@ def get_variables(muse_score: MuseScore) -> list[Variable]:
 
 def get_labels(muse_score: MuseScore) -> list[Label]:
     labels = []
-    # TODO implement
-    # for child in muse_score:
-    #     if child.tag == "Labels":
-    #         for grand_child in child:
-    #             labels.append(grand_child.text)
+    rehearsal_marks = muse_score.staffs[0].get_rehearsal_marks()
+    for rehearsal_mark in rehearsal_marks:
+        labels.append(Label(rehearsal_mark.ticks, rehearsal_mark.text))
     return labels
 
 
